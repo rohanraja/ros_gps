@@ -59,6 +59,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Custom message
 #include <aruco_mapping/ArucoMarker.h>
 
+#include "aruco.cpp"
+
 /** \brief Aruco mapping namespace */
 namespace aruco_mapping
 {
@@ -93,7 +95,9 @@ public:
   /** \brief Callback function to handle image processing*/
   void imageCallback(const sensor_msgs::ImageConstPtr &original_image);
 
+
 private:
+
   
   /** \brief Function to parse data from calibration file*/
   bool parseCalibrationFile(std::string filename);
@@ -104,17 +108,23 @@ private:
   /** \brief Function to publish all known markers for visualization purposes*/
   void publishMarker(geometry_msgs::Pose markerPose, int MarkerID, int rank);
 
+  void publishCamera(geometry_msgs::Pose markerPose);
+
   /** \brief Publisher of visualization_msgs::Marker message to "aruco_markers" topic*/
   ros::Publisher marker_visualization_pub_;
 
   /** \brief Publisher of aruco_mapping::ArucoMarker custom message*/
   ros::Publisher marker_msg_pub_;
 
+  /** \brief Publisher of aruco_mapping::ArucoMarker custom message*/
+  ros::Publisher camera_pub_;
+
   /** \brief Compute TF from marker detector result*/
   tf::Transform arucoMarker2Tf(const aruco::Marker &marker);
 
   /** \brief Process actual image, detect markers and compute poses */
   bool processImage(cv::Mat input_image,cv::Mat output_image);
+  bool processImage2(cv::Mat input_image,cv::Mat output_image);
 
   //Launch file params
   std::string calib_filename_;                    

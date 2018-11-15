@@ -86,6 +86,7 @@ ArucoMapping::ArucoMapping(ros::NodeHandle *nh) :
   //ROS publishers
   marker_msg_pub_           = nh->advertise<aruco_mapping::ArucoMarker>("aruco_poses",1);
   marker_visualization_pub_ = nh->advertise<visualization_msgs::Marker>("aruco_markers",1);
+  camera_pub_ = nh->advertise<geometry_msgs::PoseStamped>("aruco_camera_pose",1);
           
   //Parse data from calibration file
   parseCalibrationFile(calib_filename_);
@@ -185,9 +186,19 @@ ArucoMapping::imageCallback(const sensor_msgs::ImageConstPtr &original_image)
   cv::waitKey(10);  
 }
 
-
 bool
 ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
+{
+  Aruco a;
+  geometry_msgs::Pose pose ;
+  a.init();
+  a.detect(input_image, world_position_geometry_msg_);
+  publishCamera(world_position_geometry_msg_);
+
+}
+
+bool
+ArucoMapping::processImage2(cv::Mat input_image,cv::Mat output_image)
 {
   aruco::MarkerDetector Detector;
   std::vector<aruco::Marker> temp_markers;
@@ -628,6 +639,7 @@ ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
 
   // Publish custom marker msg
   marker_msg_pub_.publish(marker_msg);
+  publishCamera(world_position_geometry_msg_);
 
   return true;
 }
@@ -673,6 +685,42 @@ ArucoMapping::publishTfs(bool world_option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
+
+void
+ArucoMapping::publishCamera(geometry_msgs::Pose marker_pose)
+{
+  visualization_msgs::Marker vis_marker;
+
+  geometry_msgs::PoseStamped msg_pose;
+
+  msg_pose.header.stamp = ros::Time::now();
+
+  msg_pose.header.frame_id = "world";
+
+  msg_pose.pose = marker_pose;
+
+  // vis_marker.header.frame_id = "world";
+  //
+  // vis_marker.header.stamp = ros::Time::now();
+  // vis_marker.ns = "basic_shapes";
+  // vis_marker.id = 10;
+  // vis_marker.type = visualization_msgs::Marker::CUBE;
+  // vis_marker.action = visualization_msgs::Marker::ADD;
+  //
+  // vis_marker.pose = marker_pose;
+  // vis_marker.scale.x = marker_size_;
+  // vis_marker.scale.y = marker_size_;
+  // vis_marker.scale.z = RVIZ_MARKER_HEIGHT;
+  //
+  // vis_marker.color.r = RVIZ_MARKER_COLOR_R;
+  // vis_marker.color.g = RVIZ_MARKER_COLOR_G;
+  // vis_marker.color.b = RVIZ_MARKER_COLOR_B;
+  // vis_marker.color.a = RVIZ_MARKER_COLOR_A;
+  //
+  // vis_marker.lifetime = ros::Duration(RVIZ_MARKER_LIFETIME);
+
+  camera_pub_.publish(msg_pose);
+}
 
 void
 ArucoMapping::publishMarker(geometry_msgs::Pose marker_pose, int marker_id, int index)

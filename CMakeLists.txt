@@ -21,6 +21,7 @@ include_directories(${PROJECT_SOURCE_DIR}/src/)
 
 
 SET(SOURCES ${PROJECT_SOURCE_DIR}/src/main.cpp
+            ${PROJECT_SOURCE_DIR}/src/aruco.cpp
             ${PROJECT_SOURCE_DIR}/src/aruco_mapping.cpp)
    
 SET(HEADERS ${PROJECT_SOURCE_DIR}/include/aruco_mapping.h)
