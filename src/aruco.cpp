@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
 #include <visualization_msgs/Marker.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 
 class Aruco
@@ -75,6 +76,30 @@ public:
                 pose.position.x = tvecs[0](0);
                 pose.position.y = tvecs[0](1);
                 pose.position.z = tvecs[0](2);
+
+                tf2::Quaternion q;
+
+                cv::Mat R;
+                cv::Rodrigues(rvecs[0], R);
+
+                double qq[4];
+
+                getQuaternion(R, qq);
+
+                std::cout << rvecs[0] << "\n";
+                std::cout << R << "\n";
+                std::cout << qq << "\n";
+                q.setRPY( rvecs[0](2), rvecs[0](1), rvecs[0](0) );  // Create this quaternion from roll/pitch/yaw (in radians)
+
+                // pose.orientation.x = q.getX();
+                // pose.orientation.y = q.getY();
+                // pose.orientation.z = q.getZ();
+                // pose.orientation.w = q.getW();
+
+                pose.orientation.x = qq[0];
+                pose.orientation.y = qq[1];
+                pose.orientation.z = qq[2];
+                pose.orientation.w = qq[3];
                 
             }
         }
@@ -82,5 +107,35 @@ public:
         cv::imshow("Pose estimation", image_copy);
         
     }
+
+    void getQuaternion(cv::Mat R, double Q[])
+{
+    double trace = R.at<double>(0,0) + R.at<double>(1,1) + R.at<double>(2,2);
+ 
+    if (trace > 0.0) 
+    {
+        double s = sqrt(trace + 1.0);
+        Q[3] = (s * 0.5);
+        s = 0.5 / s;
+        Q[0] = ((R.at<double>(2,1) - R.at<double>(1,2)) * s);
+        Q[1] = ((R.at<double>(0,2) - R.at<double>(2,0)) * s);
+        Q[2] = ((R.at<double>(1,0) - R.at<double>(0,1)) * s);
+    } 
+    
+    else 
+    {
+        int i = R.at<double>(0,0) < R.at<double>(1,1) ? (R.at<double>(1,1) < R.at<double>(2,2) ? 2 : 1) : (R.at<double>(0,0) < R.at<double>(2,2) ? 2 : 0); 
+        int j = (i + 1) % 3;  
+        int k = (i + 2) % 3;
+
+        double s = sqrt(R.at<double>(i, i) - R.at<double>(j,j) - R.at<double>(k,k) + 1.0);
+        Q[i] = s * 0.5;
+        s = 0.5 / s;
+
+        Q[3] = (R.at<double>(k,j) - R.at<double>(j,k)) * s;
+        Q[j] = (R.at<double>(j,i) + R.at<double>(i,j)) * s;
+        Q[k] = (R.at<double>(k,i) + R.at<double>(i,k)) * s;
+    }
+}
     
 };
